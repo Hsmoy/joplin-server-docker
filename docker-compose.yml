@@ -1,0 +1,56 @@
+version: '3'
+services:
+    db:
+        image: postgres:13.1
+        restart: unless-stopped
+        environment:
+            - APP_PORT=22300
+            - POSTGRES_PASSWORD=postgresqljoplin
+            - POSTGRES_USER=user
+            - POSTGRES_DB=joplin
+        networks:
+            service1_net:
+                ipv4_address: 172.22.0.101
+    app:
+        image: joplin/server:latest
+        depends_on:
+            - db
+        restart: unless-stopped
+        environment:
+            - APP_PORT=22300
+            - APP_BASE_URL=http://172.22.0.100:22300
+            - DB_CLIENT=pg
+            - POSTGRES_PASSWORD=postgresqljoplin
+            - POSTGRES_DATABASE=joplin
+            - POSTGRES_USER=user
+            - POSTGRES_PORT=5432
+            - POSTGRES_HOST=db
+
+        networks:
+            service1_net:
+                ipv4_address: 172.22.0.100
+
+
+    
+
+    nginx:
+        container_name: nginx 
+        image: nginx
+        restart: always
+        ports:
+        - 9090:80
+        volumes:
+        - $PWD/default.conf:/etc/nginx/conf.d/default.conf
+        networks:
+            service1_net:
+                ipv4_address: 172.22.0.102
+
+
+
+
+networks:
+  service1_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.22.0.0/16
